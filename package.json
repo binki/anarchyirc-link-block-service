@@ -1,0 +1,26 @@
+{
+  "name": "anarchyirc-link-block-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha -r"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/binki/anarchyirc-link-block-service.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/binki/anarchyirc-link-block-service/issues"
+  },
+  "homepage": "https://github.com/binki/anarchyirc-link-block-service#readme",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "express-autoserve": "0.0.2",
+    "mkdirp": "^0.5.1",
+    "verror": "^1.9.0"
+  }
+}
