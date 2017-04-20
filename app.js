@@ -1,6 +1,7 @@
 'use strict';
 
 const bodyParser = require('body-parser');
+const crypto = require('crypto');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -169,14 +170,14 @@ app.get('/links.conf', (req, res, next) => {
     }).catch(next);
 });
 
-app.put('/update', (req, res, next) => {
+app.post('/update', (req, res, next) => {
     getServerInfoPromise().then(servers => {
         // Get cert from request.
         const certPem = res.socket.params.SSL_CLIENT_CERT;
         if (!certPem) {
             throw new Error('You have not sent an SSL certificate. Either your client or the server is misconfigured.');
         }
-        const certKey = keyifyPemBuffer(bufferizePem());
+        const certKey = keyifyPemBuffer(bufferizePem(certPem));
         // Look up client by their certificate.
         const server = servers.byCertKey[certKey];
         if (!server) {
@@ -188,6 +189,8 @@ app.put('/update', (req, res, next) => {
             throw new Error('Required parameter “cert” missing.');
         }
         return new Promise((resolve, reject) => mkdirp(path.join(__dirname, 'data'), ex => ex ? reject(ex) : fs.writeFile(path.join(__dirname, 'data', `${server.name}.crt`), req.body.cert, ex => ex ? reject(ex) : resolve()))).then(() => {
+            // Flush cache.
+            getServerInfoPromise(true);
             res.end(`Updated certificate for ${server.name}`);
         });
     }).catch(next);
