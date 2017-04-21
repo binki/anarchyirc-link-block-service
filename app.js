@@ -10,6 +10,7 @@ const verror = require('verror');
 
 const app = express();
 
+const pathModule = path;
 const VError = verror.VError;
 
 app.use(bodyParser.urlencoded({
@@ -59,6 +60,19 @@ function fingerprintPemBuffer(buf) {
 
 function readFile(path, options) {
     return new Promise((resolve, reject) => fs.readFile(path, options || {}, (ex, data) => ex ? reject(ex) : resolve(data)));
+}
+
+function writeFile(path, data) {
+    const dir = pathModule.dirname(path);
+    const tempPath = pathModule.join(dir, `.#${pathModule.basename(path)}#`);
+    // Convenience step 1: create directory if not exists.
+    return new Promise((resolve, reject) => mkdirp(dir, ex => ex ? reject(ex) : resolve())).then(() => {
+        // Write out to .#…# first for transactional replace.
+        return new Promise((resolve, reject) => fs.writeFile(tempPath, data, ex => ex ? reject(ex) : resolve()));
+    }).then(() => {
+        // Rename over existing.
+        return new Promise((resolve, reject) => fs.rename(tempPath, path, ex => ex ? reject(ex) : resolve()));
+    });
 }
 
 let lastServerInfoPromise = null;
@@ -188,7 +202,7 @@ app.post('/update', (req, res, next) => {
         if (!req.body.cert) {
             throw new Error('Required parameter “cert” missing.');
         }
-        return new Promise((resolve, reject) => mkdirp(path.join(__dirname, 'data'), ex => ex ? reject(ex) : fs.writeFile(path.join(__dirname, 'data', `${server.name}.crt`), req.body.cert, ex => ex ? reject(ex) : resolve()))).then(() => {
+        return writeFile(path.join(__dirname, 'data', `${server.name}.crt`), req.body.cert).then(() => {
             // Flush cache.
             getServerInfoPromise(true);
             res.end(`Updated certificate for ${server.name}`);
