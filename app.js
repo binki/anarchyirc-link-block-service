@@ -1,6 +1,7 @@
 'use strict';
 
 const bodyParser = require('body-parser');
+const confGeneration = require('./conf-generation');
 const crypto = require('crypto');
 const express = require('express');
 const fs = require('fs');
@@ -55,7 +56,7 @@ function keyifyPemBuffer(buf) {
 function fingerprintPemBuffer(buf) {
     const hash = crypto.createHash('sha256');
     hash.update(buf);
-    return hash.digest('hex');
+    return hash.digest('hex').replace(/(..)/g, ':$1').substring(1).toUpperCase();
 }
 
 function readFile(path, options) {
@@ -98,7 +99,7 @@ const getServerInfoPromise = (() => {
             return Promise.all(files.map(file => {
                 // A .crt file must exist for each. Use this to identify
                 // the list of known names and go from there.
-                const serverName = /(.*)\.crt$/.exec(file)[1];
+                const serverName = (/(.*)\.crt$/.exec(file) || [])[1];
                 if (!serverName) {
                     return;
                 }
@@ -125,7 +126,9 @@ const getServerInfoPromise = (() => {
                     }).then(configJson => {
                         // Set defaults.
                         configJson = Object.assign(Object.create(null), {
+                            autoconnect: true,
                             hostname: serverName,
+                            port: 6697,
                         }, configJson);
 
                         // Load and fingerprint the stored certificate
@@ -137,8 +140,10 @@ const getServerInfoPromise = (() => {
                         }, ex => null).then(unrealCertFingerprint => {
 
                             return {
+                                autoconnect: configJson.autoconnect,
                                 name: serverName,
                                 hostname: configJson.hostname,
+                                port: configJson.port,
                                 serverCertKey: keyifyPemBuffer(serverCertBuf),
                                 unrealCertFingerprint: unrealCertFingerprint,
                             };
@@ -165,22 +170,12 @@ const getServerInfoPromise = (() => {
 app.get('/links.conf', (req, res, next) => {
     getServerInfoPromise().then(servers => {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        res.write('/* anarchyirc © binki 2017. Work in progress (data first, syntax later!). */\n');
+        const generator = confGeneration.createGenerator(req.query.syntax, res);
         servers.names.map(serverName => servers.byName[serverName]).map(server => {
-            if (!server.unrealCertFingerprint) {
-                res.write(`/* Omitting ${server.name}: no unrealircd certificate specified */
-`);
-                return;
-            }
-            res.write(`link ${server.name} {
-  hostname ${server.hostname};
-  password-connect *;
-  password-receive ${server.unrealCertFingerprint} { sslclientcertfp; };
-};
-
-`);
+            generator.write(server);
         });
-        res.end();
+        // calls res.end() for us.
+        generator.end();
     }).catch(next);
 });
 
