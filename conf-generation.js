@@ -57,7 +57,7 @@ generators.set('unrealircd4', function (out) {
   password "${server.unrealCertFingerprint}" { ssclientcertfp; };
   hub *;
   class servers;
-}
+};
 
 `);
     }
