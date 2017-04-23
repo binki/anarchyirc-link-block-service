@@ -30,6 +30,10 @@ server. Currently, the following keys are allowed:
 To populate this initially, run the client update script on each
 client.
 
+`updated` may be touched in the `data` directory to cause the process
+to exit (in case you cannot run `kill(1)` yourself). In the future it
+may do this in a more graceful way.
+
 # Apache Configuration
 
 For the directory where this is deployed, the following configuration

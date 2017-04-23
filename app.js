@@ -205,4 +205,6 @@ app.post('/update', (req, res, next) => {
     }).catch(next);
 });
 
+app.get('/pid', (req, res) => res.end(`${process.pid}`));
+
 module.exports = app;
