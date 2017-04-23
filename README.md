@@ -44,4 +44,16 @@ is required:
 SSLVerifyClient optional_no_ca
 # Export the client certificate to the environment so that it can be verified by the CGI scripts.
 SSLOptions +ExportCertData
+
+# You must have FastCGI set up, e.g., mod_fcgid, to serve
+# exeutables ending in .cgi. It is recommended to use either
+# mod_suexec or an appliance VM (not shown):
+<Directory /home/*/public_html>
+  # Do not use AddHandler because it matches files like
+  # blah.cgi.en (or blah.cgi.i_do_not_want_this_to_execute).
+  <FilesMatch "\.cgi$">
+    SetHandler fcgid-script
+    Options +ExecCGI
+  </FilesMatch>
+</Directory>
 ```
