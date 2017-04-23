@@ -39,7 +39,7 @@ may do this in a more graceful way.
 For the directory where this is deployed, the following configuration
 is required:
 
-```
+```apache
 # Allow things to read client certs but do not rely on CAs for stuff.
 SSLVerifyClient optional_no_ca
 # Export the client certificate to the environment so that it can be verified by the CGI scripts.
