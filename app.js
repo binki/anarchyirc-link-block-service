@@ -1,6 +1,8 @@
 'use strict';
 
 const bodyParser = require('body-parser');
+// Ubuntu LTS uses node-4.x which doesn’t implement Buffer.from().
+const bufferFrom = require('buffer-from');
 const confGeneration = require('./conf-generation');
 const crypto = require('crypto');
 const express = require('express');
@@ -34,7 +36,7 @@ function bufferizePem(text) {
     while (lines.find(line => /^-+BEGIN CERTIFICATE/.test(line))) {
         lines.shift();
     }
-    const buf = Buffer.from(lines.join(''), 'base64');
+    const buf = bufferFrom(lines.join(''), 'base64');
     if (buf.length < 32) {
         throw new Error(`Expected PEM data to be longer than 32, got ${buf.length}`);
     }

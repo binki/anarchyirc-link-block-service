@@ -18,6 +18,7 @@
   "homepage": "https://github.com/binki/anarchyirc-link-block-service#readme",
   "dependencies": {
     "body-parser": "^1.17.1",
+    "buffer-from": "^0.1.1",
     "chokidar": "^1.6.1",
     "express": "^4.15.2",
     "express-autoserve": "0.0.2",
