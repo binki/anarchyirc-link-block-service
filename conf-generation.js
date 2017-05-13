@@ -35,6 +35,27 @@ function unrealircdOmittedComment(out, server) {
     out.write(`/* Omitting ${server.name}: no unrealircd certificate specified. */\n`);
 }
 
+generators.set('json', function (out) {
+    var o = Object.create(null);
+
+    this.write = function (server) {
+        // Do not do something like just handing the server object
+        // directly over. Only explicitly written properties should go
+        // out (i.e., this is a whitelist) in case we ever add
+        // sensitive data to the server object.
+        o[server.name] = {
+            autoconnect: server.autoconnect,
+            hostname: server.hostname,
+            port: server.port,
+            unrealCertFingerprint: server.unrealCertFingerprint,
+        };
+    };
+
+    this.end = function () {
+        out.end(JSON.stringify(o));
+    };
+});
+
 generators.set('unrealircd4', function (out) {
     unrealircdHeadComment(out, ' * syntax=unrealircd4\n');
 
