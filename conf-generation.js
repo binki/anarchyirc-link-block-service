@@ -23,6 +23,7 @@ module.exports.createGenerator = function (name, out) {
 }
 
 function unrealircdHeadComment(out, extra) {
+    out.setHeader('Content-Type', 'text/plain; charset=utf-8');
     out.write('/*\n');
     out.write(' * anarchyirc © binki 2017.\n');
     out.write(' * Work in progress.\n');
@@ -36,6 +37,8 @@ function unrealircdOmittedComment(out, server) {
 }
 
 generators.set('json', function (out) {
+    out.setHeader('Content-Type', 'application/json; charset=utf-8');
+
     var o = Object.create(null);
 
     this.write = function (server) {

@@ -171,7 +171,6 @@ const getServerInfoPromise = (() => {
 
 app.get('/links.conf', (req, res, next) => {
     getServerInfoPromise().then(servers => {
-        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         const generator = confGeneration.createGenerator(req.query.syntax, res);
         servers.names.map(serverName => servers.byName[serverName]).map(server => {
             generator.write(server);
