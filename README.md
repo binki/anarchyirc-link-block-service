@@ -1,3 +1,8 @@
+Meant to server `unrealircd.conf`-compatible `links.conf` for Remote
+Includes and enable servers to update their SSL certificates through a
+[simple
+client](https://github.com/binki/anarchyirc-link-block-client).
+
 # Configuration
 
 The `servers` directory contains all of the human-managed per-server
@@ -57,3 +62,46 @@ SSLOptions +ExportCertData
   </FilesMatch>
 </Directory>
 ```
+
+# API
+
+With how things are now, you must access and include `index.cgi` in
+your URI. I.e., this uses (and only knows how to use) `PATH_INFO`.
+For example, getting the links config can be `«URI to directory where
+index.cgi is»/index.cgi/links.conf`. `index.cgi` is considered part of
+the `«endpoint»` as documented [in the
+client](https://github.com/binki/anarchyirc-link-block-client). E.g.,
+an `«endpoint»` might be `https://example.org/ri/index.cgi`.
+
+`«endpoint»/update`: POST, HTTP client must present an SSL certificate
+matching the certificate in `servers/«server me::name».crt`. The link
+block service looks up `me::name` based on the presented
+certificate’s fingerprint (no need to set the Common Name or Subject
+Alternative Name or anything). The POSTed body should include an
+entity named `cert` which is the PEM formatted public certificate that
+the IRCd uses. The POSTed cert will be deposited to
+`data/«me::name».crt` and the link service will start returning the
+new fingerprint in its generated link blocks after success.
+
+`«endpoint»/links.conf`: GET, gets a configuration file meant to be
+included into your IRCd’sconfiguration e.g. using [UnrealIRCd’s
+Remote Includes
+feature](https://www.unrealircd.org/docs/Remote_includes). The
+generated configuration is safe to share with the public as no private
+data is stored in it (unless you consider your listing of servers
+private data which you may if e.g. you disable `/MAP` or `/LINKS` in
+an attempt to make DoS attacks more difficult). However, even so, you
+should access this URI over HTTPS to guard against a MiTM attempting
+to intercept and modify the generated configuration.
+
+This endpoint has the following GET parameters:
+
+* `syntax` (default: `unrealircd4`). You may specify syntaxes of
+  either `unrealircd3`, `unrealircd4`, or `json`. E.g.,
+  `«endpoint»/links.conf?syntax=unrealircd` will return the
+  configuration in `unrealircd3` style (but [you should not be using
+  UnrealIRCd-3.x
+  anymore](https://forums.unrealircd.org/viewtopic.php?f=1&t=8629)). The
+  `json` format may be useful for consuming and transforming. Other
+  syntaxes may be added by modifying
+  [`conf-generation.js`](conf-generation.js).
